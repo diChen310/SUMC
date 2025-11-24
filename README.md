@@ -4,7 +4,7 @@
 
 A computational framework for robust integration of multiple spatial transcriptomics datasets across platforms and batches.
 
-![png](images/workflow.png)
+![png](image/workflow.png)
 
 ## Overview
 
