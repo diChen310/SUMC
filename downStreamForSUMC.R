@@ -1,10 +1,8 @@
-
 library(ConsensusClusterPlus)
 library(cluster)
-library(pheatmap)
 ####consensus clustering based on embeddings####
 clusters_all <- unique(markers_cds_all_sig$bs_cluster)
-mlp_emp <- read.csv(file = './pythonOut/SUMC_output_embeddings.csv',row.names = 1)
+mlp_emp <- read.csv(file = './SUMC_output_emb.csv',row.names = 1)
 rownames(mlp_emp) <- rownames(matrix_sim)
 
 
@@ -22,15 +20,14 @@ silhouette_scores <- sapply(10:30, function(k) {
 plot(10:30, silhouette_scores, type = "b", pch = 19, frame = FALSE,
      xlab = "Number of clusters (k)", ylab = "silhouette coefficient",
      main = "silhouette coefficient")
-	 
-cluster_k19_cc <- cluster_labels_k30_cc[[19]][["consensusClass"]]
+
+cluster_cc <- cluster_labels_k30_cc[[19]][["consensusClass"]]
 
 
 res_sc = data.frame(orig.ident = unlist(lapply(clusters_all,function(a){
   strsplit(a,' _ ')[[1]][1]
 })),
-cluster_k30= paste('K',cluster_k30_cc),
-cluster_k19= paste('M',cluster_k19_cc),
+cluster_m= paste('M',cluster_cc),
 row.names = clusters_all)
 
 
@@ -39,12 +36,16 @@ row.names = clusters_all)
 for (i in 1:length(st.objs)) {
   
   st.i = st.objs[[i]]
-  meta.i = read.csv(file = paste0('./variables/bayesSpace_perS/bs_res_SSS',i,'.csv'),row.names = 1)
+  meta.i = read.csv(file = paste0('./bs_res_SSS',i,'.csv'),row.names = 1)
   meta.i$bs_cluster = paste(meta.i$orig.ident,'_',meta.i$best_cluster)
   #meta.i$cluster_k10 = res_sc[meta.i$bs_cluster,'cluster_k10']
-  meta.i$cluster_k30 = res_sc[meta.i$bs_cluster,'cluster_k30']
-  meta.i$cluster_k19 = res_sc[meta.i$bs_cluster,'cluster_k19']
+  #meta.i$cluster_k30 = res_sc[meta.i$bs_cluster,'cluster_k30']
+  meta.i$cluster_m = res_sc[meta.i$bs_cluster,'cluster_m']
   
   st.i = AddMetaData(st.i,meta.i)
   st.objs[[i]] = st.i
 }
+
+SpatialDimPlot(st.objs[[1]],group.by = c('cluster_m','bs_perS_k40'),pt.size.factor = 1.2)
+SpatialDimPlot(st.objs[[8]],group.by = 'cluster_m',pt.size.factor = 1.2)
+SpatialDimPlot(st.objs[[9]],group.by = 'cluster_m',pt.size.factor = 1.2)
