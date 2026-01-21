@@ -1,0 +1,20 @@
+name: sumc
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # 基础环境
+  - python=3.9
+  - r-base=4.2.1
+  
+  # Python核心
+  - numpy
+  - pandas
+  - scikit-learn
+  - pytorch
+  - tqdm
+  
+  # R核心
+  - r-ggplot2
+  - r-dplyr
+  - r-pheatmap
