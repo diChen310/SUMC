@@ -9,24 +9,12 @@ library(Seurat)
 library(ggpubr)
 library(cowplot)
 library(reshape2)
-base_colors <- c(
-  "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-  "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
-  "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5",
-  "#c49c94", "#f7b6d2", "#c7c7c7", "#dbdb8d", "#9edae5",
-  "#393b79", "#637939", "#8c6d31", "#843c39", "#7b4173",
-  "#5254a3", "#6b6ecf", "#9c9ede", "#637939", "#8ca252",
-  "#b5cf6b", "#cedb9c", "#8c6d31", "#bd9e39", "#e7ba52",
-  "#e7cb94", "#843c39", "#ad494a", "#d6616b", "#e7969c",
-  "#7b4173", "#a55194", "#ce6dbd", "#de9ed6", "#3182bd",
-  "#6baed6", "#9ecae1", "#c6dbef", "#e6550d", "#fd8d3c"
-)
-st.objs <- readRDS(file = './variables/st_obj_list.Rds')
+
 
 set.seed(1222)
 marker_sim <- function(st.i,cluster.res){
   expr.d = st.i@assays$Spatial@counts
-
+  
   rowData <- data.frame(gene_id = rownames(expr.d),gene_short_name = rownames(expr.d),
                         sumC=Matrix::rowSums(expr.d),
                         noC = Matrix::rowSums(expr.d!=0))
@@ -45,17 +33,12 @@ marker_sim <- function(st.i,cluster.res){
   cds = cds[!grepl('^MT|^RP',rownames(cds)),]
   markers_i <- top_markers(cds,group_cells_by = 'bs_cluster',
                            genes_to_test_per_group= 100, cores=32)
- 
+  
   return(markers_i)
   
 }
 
-cluster_tags <- c('bs_perS_k10','bs_perS_k15','bs_perS_k20',
-                  'bs_perS_k30', 'bs_perS_k40','bs_perS_k50')
-
-
-cols.cl = base_colors
-names(cols.cl) = paste0('C',1:50)
+####st.objs is a list of seurat objects
 
 ####Try different K in each sample####
 
@@ -64,7 +47,7 @@ for( i in 1:length(st.objs)){
   
   ####read data
   st.i = st.objs[[i]]
-    
+  
   st.i = st.i[,st.i$nFeature_Spatial>0]
   image.i = st.i@images[[1]]
   image.i = image.i@coordinates
@@ -96,91 +79,91 @@ for( i in 1:length(st.objs)){
   
   sce <- spatialCluster(sce, q = 15,platform="Visium", d=10,nrep=3000,init.method="mclust", model="t")
   st.i$bs_perS_k15 = paste0('C',sce$spatial.cluster)
-    
+  
   sce <- spatialCluster(sce, q = 20, platform="Visium", d=10,nrep=3000,init.method="mclust", model="t")
   st.i$bs_perS_k20 = paste0('C',sce$spatial.cluster)
-   
+  
   sce <- spatialCluster(sce, q = 30,  platform="Visium", d=10,nrep=3000,init.method="mclust", model="t")
   st.i$bs_perS_k30 = paste0('C',sce$spatial.cluster)
-   
+  
   sce <- spatialCluster(sce, q = 40, platform="Visium", d=10,nrep=3000,init.method="mclust", model="t")
   st.i$bs_perS_k40 = paste0('C',sce$spatial.cluster)
-   
+  
   sce <- spatialCluster(sce, q = 50, platform="Visium", d=10,nrep=3000,init.method="mclust", model="t")
   st.i$bs_perS_k50 = paste0('C',sce$spatial.cluster)
-
- 
+  
+  
   #write.csv(st.i@meta.data,file = paste0('./variables/bayesSpace_perS/bs_res_SS',i,'.csv'))
   
   
   print(paste('Finished for',i,'!!!!!!!!!!!!!!!'))
   
-
- 
   
-    sim_res_k10 <- marker_sim(st.i,st.i$bs_perS_k10,25)
-    
-    marker_k10 = sim_res_k10 %>% filter(marker_test_q_value < 0.01 & fraction_expressing > 0.3)
-    
-    sim_res_k15 <- marker_sim(st.i,st.i$bs_perS_k15,25)
-    
-    marker_k15 = sim_res_k15 %>% filter(marker_test_q_value < 0.01 & fraction_expressing > 0.3)
-    
-    sim_res_k20 <- marker_sim(st.i,st.i$bs_perS_k20,25)
-	
-    marker_k20 = sim_res_k20 %>% filter(marker_test_q_value < 0.01 & fraction_expressing > 0.3)
-    
-    sim_res_k30 <- marker_sim(st.i,st.i$bs_perS_k30,25)
-    
-    marker_k30 = sim_res_k30 %>% filter(marker_test_q_value < 0.01 & fraction_expressing > 0.3)
-    
-    sim_res_k40 <- marker_sim(st.i,st.i$bs_perS_k40,25)
-    
-    marker_k40 = sim_res_k40 %>% filter(marker_test_q_value < 0.01 & fraction_expressing > 0.3)
-    
-    
-    sim_res_k50 <- marker_sim(st.i,st.i$bs_perS_k50,25)
-    
-    marker_k50 = sim_res_k50 %>% filter(marker_test_q_value < 0.01 & fraction_expressing > 0.3)
-    
-    # 
-    marker_unique_no <- c(length(unique(marker_k10$gene_id)),
-                   length(unique(marker_k15$gene_id)),
-                   length(unique(marker_k20$gene_id)),
-                   length(unique(marker_k30$gene_id)),
-                   length(unique(marker_k40$gene_id)),
-                   length(unique(marker_k50$gene_id))
-                   )
-                    
-    
-    
-    print(marker_unique_no)
-
-    markers_try <- list(sim_res_k10,
-                        sim_res_k15,
-                        sim_res_k20,
-                        sim_res_k30,
-                        sim_res_k40,
-                        sim_res_k50
-    )
-    
-    names(markers_try) <- cluster_tags
-    sel_cluster = cluster_tags[marker_unique_no == max(marker_unique_no)]
-
-    if(length(sel_cluster)>1){
-      sel_cluster <- sel_cluster[1]
-    }
-    print(sel_cluster)
-    st.i$best_cluster = st.i@meta.data[,sel_cluster]
-    
-    marker_best_i <- markers_try[[sel_cluster]]
-    print(setdiff(unique(marker_best_i$cell_group),unique(st.i$best_cluster)))
-    
-    write.csv(st.i@meta.data,file = paste0('./variables/bayesSpace_perS/bs_res_SSS',i,'.csv'))
-    write.csv(marker_best_i,file = paste0('./variables/bayesSpace_perS/bs_res_marker_top_',i,'.csv'))
-    
-    print(paste('Item',i,paste(marker_unique_no,collapse = ' ')))
-    
+  
+  
+  sim_res_k10 <- marker_sim(st.i,st.i$bs_perS_k10)
+  
+  marker_k10 = sim_res_k10 %>% filter(marker_test_q_value < 0.01 & fraction_expressing > 0.3)
+  
+  sim_res_k15 <- marker_sim(st.i,st.i$bs_perS_k15)
+  
+  marker_k15 = sim_res_k15 %>% filter(marker_test_q_value < 0.01 & fraction_expressing > 0.3)
+  
+  sim_res_k20 <- marker_sim(st.i,st.i$bs_perS_k20)
+  
+  marker_k20 = sim_res_k20 %>% filter(marker_test_q_value < 0.01 & fraction_expressing > 0.3)
+  
+  sim_res_k30 <- marker_sim(st.i,st.i$bs_perS_k30)
+  
+  marker_k30 = sim_res_k30 %>% filter(marker_test_q_value < 0.01 & fraction_expressing > 0.3)
+  
+  sim_res_k40 <- marker_sim(st.i,st.i$bs_perS_k40)
+  
+  marker_k40 = sim_res_k40 %>% filter(marker_test_q_value < 0.01 & fraction_expressing > 0.3)
+  
+  
+  sim_res_k50 <- marker_sim(st.i,st.i$bs_perS_k50)
+  
+  marker_k50 = sim_res_k50 %>% filter(marker_test_q_value < 0.01 & fraction_expressing > 0.3)
+  
+  # 
+  marker_unique_no <- c(length(unique(marker_k10$gene_id)),
+                        length(unique(marker_k15$gene_id)),
+                        length(unique(marker_k20$gene_id)),
+                        length(unique(marker_k30$gene_id)),
+                        length(unique(marker_k40$gene_id)),
+                        length(unique(marker_k50$gene_id))
+  )
+  
+  
+  
+  print(marker_unique_no)
+  
+  markers_try <- list(sim_res_k10,
+                      sim_res_k15,
+                      sim_res_k20,
+                      sim_res_k30,
+                      sim_res_k40,
+                      sim_res_k50
+  )
+  
+  names(markers_try) <- cluster_tags
+  sel_cluster = cluster_tags[marker_unique_no == max(marker_unique_no)]
+  
+  if(length(sel_cluster)>1){
+    sel_cluster <- sel_cluster[1]
+  }
+  print(sel_cluster)
+  st.i$best_cluster = st.i@meta.data[,sel_cluster]
+  
+  marker_best_i <- markers_try[[sel_cluster]]
+  print(setdiff(unique(marker_best_i$cell_group),unique(st.i$best_cluster)))
+  
+  write.csv(st.i@meta.data,file = paste0('./bs_res_SSS',i,'.csv'))
+  write.csv(marker_best_i,file = paste0('./bs_res_marker_top_',i,'.csv'))
+  
+  print(paste('Item',i,paste(marker_unique_no,collapse = ' ')))
+  
 }
 
 
@@ -190,7 +173,7 @@ for( i in 1:length(st.objs)){
 markers_all = data.frame()
 for(i in 1:length(st.objs)){
   
-  markers_i = read.csv(file = paste0('./variables/bayesSpace_perS/bs_res_marker_top_',i,'.csv'))
+  markers_i = read.csv(file = paste0('./bs_res_marker_top_',i,'.csv'))
   
   print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
   print(i)
@@ -252,5 +235,5 @@ genes_l <- names(genes_sum)[genes_sum>2]
 
 mat_gene <- mat_markers_temp[,genes_l]
 ####output the files for input of SUMC
-write.csv(mat_gene,file='./variables/bestk_try10_input_matrix_0.csv')
-write.csv(matrix_sim,file='./variables/bestk_try10_adj_matrix_0.csv')
+write.csv(mat_gene,file='./bestk_try10_input_matrix_0.csv')
+write.csv(matrix_sim,file='./bestk_try10_adj_matrix_0.csv')
