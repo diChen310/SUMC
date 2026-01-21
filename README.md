@@ -108,7 +108,7 @@ SampleN_Cluster1,1,0,1
 SampleN_Cluster2,0,1,0
 SampleN_Cluster3,1,1,0
 ```
-#### Spatial Similarity Matrix (adjacency_matrix.csv)
+#### Similarity Matrix (adjacency_matrix.csv)
 
 - Format: CSV file with row names
 
@@ -174,3 +174,7 @@ Use parallel processing for marker gene identification
 
 While BayesSpace is selected for the local clustering of per-sample ST, you can experiment with other algorithms like BANKSY or others, make sure you can generate the input files for sumc.py
 
+## Example input files for sumc.py:
+
+bestk_try10_input_matrix_0.csv is one example for "Gene Signature Matrix"
+bestk_try10_adj_matrix_0.csv is one example for "Similarity Matrix"
