@@ -176,5 +176,5 @@ While BayesSpace is selected for the local clustering of per-sample ST, you can 
 
 ## Example input files for sumc.py:
 
-bestk_try10_input_matrix_0.csv is one example for "Gene Signature Matrix"
+bestk_try10_input_matrix_0.csv is one example for "Gene Signature Matrix";
 bestk_try10_adj_matrix_0.csv is one example for "Similarity Matrix"
