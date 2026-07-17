@@ -10,9 +10,11 @@ library(ggpubr)
 library(cowplot)
 library(reshape2)
 
+K <- 100
+alpha <- 0.5
 
 set.seed(1222)
-marker_sim <- function(st.i,cluster.res){
+marker_sim <- function(st.i,cluster.res,K=100){
   expr.d = st.i@assays$Spatial@counts
   
   rowData <- data.frame(gene_id = rownames(expr.d),gene_short_name = rownames(expr.d),
@@ -32,7 +34,7 @@ marker_sim <- function(st.i,cluster.res){
   cds[['bs_cluster']] = cluster.res
   cds = cds[!grepl('^MT|^RP',rownames(cds)),]
   markers_i <- top_markers(cds,group_cells_by = 'bs_cluster',
-                           genes_to_test_per_group= 100, cores=32)
+                           genes_to_test_per_group= K, cores=32)
   
   return(markers_i)
   
@@ -40,7 +42,7 @@ marker_sim <- function(st.i,cluster.res){
 
 ####st.objs is a list of seurat objects
 
-####Try different K in each sample####
+####Try different q in each sample####
 
 
 for( i in 1:length(st.objs)){
@@ -185,7 +187,7 @@ markers_all$bs_cluster = paste(markers_all$SampleID,'_',markers_all$cell_group)
 
 markers_cds_all_sig <- markers_all[markers_all$marker_test_q_value<0.01,]
 
-markers_cds_all_sig_top50 <- group_by(markers_cds_all_sig,bs_cluster) %>% top_n(50,specificity)
+markers_cds_all_sig_top50 <- group_by(markers_cds_all_sig,bs_cluster) %>% top_n(K*alpha,specificity)
 
 markers_cds_all_sig_top50 <- as.data.frame(markers_cds_all_sig_top50)
 
