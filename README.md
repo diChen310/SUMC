@@ -23,7 +23,7 @@ ST Data list
     │
     ▼
 prepareForSUMC.R (Step 1)
-    ├── Per-sample spatial clustering (BayesSpace, K=10-50)
+    ├── Per-sample spatial clustering (BayesSpace, q=10-50)
     ├── Marker gene identification 
     ├── Optimal K selection (max unique markers)
     ├── Cross-sample gene signature matrix
@@ -165,6 +165,16 @@ st.objs <- list(
 # Save as RDS for pipeline
 saveRDS(st.objs, "st_obj_list.Rds")
 ```
+## Key Parameters and Recommended Settings
+
+| Parameter | Description | Recommended Range | Default |
+|:---|:---|:---|:---|
+| `K` | Number of top marker genes for gene signature matrix | 50–500 | 100 |
+| `alpha` | Fraction of K used for similarity matrix | 0.25–1.0 | 0.5 |
+| `initial_cluster_num` | Per-sample BayesSpace cluster number | 10–50 | Sample-specific (optimized by max unique markers) |
+| `n_epochs` | Training epochs for encoder-decoder | 500–2000 | 1000 |
+
+For most applications, we recommend starting with the default configuration (K = 100, alpha = 0.5) and adjusting based on dataset size and complexity. See our manuscript Figure S4 for detailed parameter sensitivity analysis.
 
 ## Performance Tips:
 
@@ -172,8 +182,13 @@ Pre-filter low-quality spots before analysis
 
 Use parallel processing for marker gene identification
 
-While BayesSpace is selected for the local clustering of per-sample ST, you can experiment with other algorithms like BANKSY or others, make sure you can generate the input files for sumc.py
+For small cohorts (<10 samples), results may be less stable; we recommend starting with 10–15 representative samples covering key biological variations for reliable pattern discovery
 
+The initial per-sample cluster number can be set to 30–40 as a starting point, then optimized based on the number of non-redundant marker genes
+
+While BayesSpace is selected for local clustering in our implementation, SUMC is modular—you can experiment with other algorithms like BANKSY or STAGATE for the initial per-sample clustering, as long as the required input files (gene signature matrix and similarity matrix) can be generated
+
+For very large cohorts, the per-sample clustering step scales linearly with sample number, but the meta-clustering step operates on cluster-level aggregated features, making large-scale analysis feasible
 ## Example input files for sumc.py:
 
 bestk_try10_input_matrix_0.csv is one example for "Gene Signature Matrix";
